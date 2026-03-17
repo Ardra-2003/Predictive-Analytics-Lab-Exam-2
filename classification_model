@@ -1,0 +1,83 @@
+# Import libraries
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import confusion_matrix, accuracy_score, classification_report
+
+# -----------------------------
+# Load Dataset
+# -----------------------------
+data = pd.read_csv('../data/dataset.csv')
+
+print("First 5 rows:\n", data.head())
+print("\nDataset Info:\n")
+print(data.info())
+print("\nStatistical Summary:\n", data.describe())
+
+# -----------------------------
+# EDA (Basic Visualization)
+# -----------------------------
+plt.scatter(data.iloc[:, 0], data.iloc[:, 1], c=data.iloc[:, -1])
+plt.title("Dataset Visualization")
+plt.xlabel("Feature 1")
+plt.ylabel("Feature 2")
+plt.savefig("../outputs/eda_plot.png")
+plt.show()
+
+# -----------------------------
+# Prepare Data
+# -----------------------------
+X = data.iloc[:, :-1].values
+y = data.iloc[:, -1].values
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+scaler = StandardScaler()
+X_train = scaler.fit_transform(X_train)
+X_test = scaler.transform(X_test)
+
+# -----------------------------
+# Model Training
+# -----------------------------
+model = LogisticRegression()
+model.fit(X_train, y_train)
+
+# -----------------------------
+# Prediction
+# -----------------------------
+y_pred = model.predict(X_test)
+
+# -----------------------------
+# Evaluation
+# -----------------------------
+print("\nAccuracy:", accuracy_score(y_test, y_pred))
+print("\nConfusion Matrix:\n", confusion_matrix(y_test, y_pred))
+print("\nClassification Report:\n", classification_report(y_test, y_pred))
+
+# -----------------------------
+# Decision Boundary Plot
+# -----------------------------
+X_set, y_set = X_train, y_train
+
+X1, X2 = np.meshgrid(
+    np.arange(start=X_set[:, 0].min()-1, stop=X_set[:, 0].max()+1, step=0.01),
+    np.arange(start=X_set[:, 1].min()-1, stop=X_set[:, 1].max()+1, step=0.01)
+)
+
+plt.contourf(
+    X1, X2,
+    model.predict(np.array([X1.ravel(), X2.ravel()]).T).reshape(X1.shape),
+    alpha=0.3
+)
+
+plt.scatter(X_set[:, 0], X_set[:, 1], c=y_set)
+plt.title("Decision Boundary (Training Set)")
+plt.xlabel("Feature 1")
+plt.ylabel("Feature 2")
+
+plt.savefig("../outputs/decision_boundary.png")
+plt.show()
